@@ -1,0 +1,262 @@
+>> Sudo su
+SonarQube
+>> sudo apt update
+>> sudo apt upgrade -y
+>> sudo apt install -y openjdk-21-jdk
+>> java -version
+>> sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" /etc/apt/sources.list.d/pgdg.list'
+>> wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add –
+>> sudo apt install postgresql postgresql-contrib -y
+>> sudo systemctl enable postgresql
+>> sudo systemctl start postgresql
+>> sudo systemctl status postgresql
+>> psql –version
+>> sudo -i -u postgres
+>> createuser ddsonar
+>> psql
+>> ALTER USER ddsonar WITH ENCRYPTED password 'admin';
+>> CREATE DATABASE ddsonarqube OWNER ddsonar;
+>> GRANT ALL PRIVILEGES ON DATABASE ddsonarqube to ddsonar;
+>> \l
+>> \du
+>> \q
+>> exit
+>> sudo apt install zip -y
+>> sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-26.2.0.119303.zip
+>> sudo unzip sonarqube-26.2.0.119303.zip
+>> sudo mv sonarqube-26.2.0.119303 sonarqube
+>>sudo mv sonarqube /opt/
+>> sudo groupadd ddsonar
+>> sudo useradd -d /opt/sonarqube -g ddsonar ddsonar
+>> sudo chown ddsonar:ddsonar /opt/sonarqube -R
+>> sudo nano /opt/sonarqube/conf/sonar.properties
+>> add this line sonar.jdbc.url=jdbc:postgresql://localhost:5432/ddsonarqube
+>> sudo nano /opt/sonarqube/bin/linux-x86-64/sonar.sh
+>> add this RUN_AS_USER=ddsonar
+>> sudo nano /etc/systemd/system/sonar.service
+>> add this [Unit]
+Description=SonarQube service
+After=syslog.target network.target
+[Service]
+Type=forking
+ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
+ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+User=ddsonar
+Group=ddsonar
+Restart=always
+LimitNOFILE=65536
+LimitNPROC=4096
+[Install]
+WantedBy=multi-user.target
+>> sudo systemctl enable sonar
+>> sudo systemctl start sonar
+>> sudo systemctl status sonar
+>> sudo nano /etc/sysctl.conf
+>> add this vm.max_map_count=262144
+fs.file-max=65536
+ulimit -n 65536
+ulimit -u 4096
+>> sudo reboot
+>> https://IP:9000
+>> Jenkins install commands
+>> #!/bin/bash
+# USE UBUNTU20.04 - INSTANCE: 2GB RAM + 2VCPU MIN - WILL ONLY WORK
+sudo apt update -y
+#sudo apt install openjdk-17-jdk -y
+sudo apt install fontconfig openjdk-21-jre
+sudo apt update -y
+sudo apt install maven -y
+sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt update
+sudo apt install jenkins
+cat /var/lib/jenkins/secrets/initialAdminPassword
+#chmod 777 jenkins.sh
+#./jenkins.sh
+
+>> Tomcat Commanads
+>> sudo apt update
+>> sudo apt install tomcat10-admin -y
+>> sudo nano /etc/tomcat10/tomcat-users.xml
+>> add this <role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="admin-gui"/>
+<user username="admin" password="admin123" roles="manager-gui,manager-script,admin-gui"/>
+>> sudo nano /etc/tomcat10/server.xml
+>> port change 8080 to 8081
+>> sudo systemctl restart tomcat10
+>> new method
+>> sudo apt update -y
+>> sudo apt upgrade -y
+>> sudo apt install tomcat10 tomcat10-admin -y
+>> sudo systemctl start tomcat10
+>> sudo systemctl enable tomcat10
+>> sudo systemctl status tomcat10
+>> sudo nano /etc/tomcat10/server.xml
+>> change port 8080 to 8081
+>> sudo systemctl restart tomcat10
+>> sudo nano /etc/tomcat10/tomcat-users.xml
+>> add this <role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="admin-gui"/>
+<user username="admin" password="admin123" roles="manager-gui,manager-script,admin-gui"/>
+
+>> sudo systemctl restart tomcat10
+>> http://<EC2-PUBLIC-IP>:8081
+>> http://<EC2-PUBLIC-IP>:8081/manager/html
+STEP 4: Install Required Jenkins Plugins
+Go to:
+Manage Jenkins → Plugins → Available Plugins
+Install:
+•	Pipeline
+•	Git
+•	GitHub Integration
+•	SonarQube Scanner
+•	Maven Integration
+•	Deploy to Container
+•	Email Extension Plugin
+•	Build Timeout
+•	Credentials Binding
+•	Pipeline Utility Steps
+Restart Jenkins.
+
+To Build Ecommerce:
+>> cd ~
+>> rm -rf EcommerceApp
+>> git clone https://github.com/Msocial123/EcommerceApp.git
+>> cd EcommerceApp/EcommerceApp
+>> ls
+>> cat pom.xml
+>> nano pom.xml
+>> add this two <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+</properties>
+<build>
+    <finalName>EcommerceApp</finalName>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>3.3.2</version>
+        </plugin>
+    </plugins>
+</build>
+
+>> mvn clean package
+>> ls target
+>> sudo cp target/EcommerceApp.war /opt/tomcat/webapps/
+>> sudo systemctl restart tomcat
+>> sudo find / -type d -name webapps 2>/dev/null
+>> sudo cp target/EcommerceApp.war /var/lib/tomcat10/webapps/
+>> ls -l /opt/
+>> ls target/
+>> mvn clean package
+>> systemctl restart tomcat10
+>> sudo cp target/EcommerceApp.war /var/lib/tomcat10/webapps/
+>> sudo systemctl restart tomcat10
+>> to run  http://<EC2-PUBLIC-IP>:8080/EcommerceApp
+In sonar website generate token and copy some where
+In Jenkins -> tools -> maven add 
+Then create new item with Ecommerce-CICD in pipeline 
+Paste the code :
+pipeline {
+
+    agent any
+
+    tools {
+
+        maven 'Maven'
+
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+
+            steps {
+
+                git branch: 'master', url: 'https://github.com/Msocial123/EcommerceApp.git'
+
+            }
+
+        }
+
+        stage('Check Project Structure') {
+
+            steps {
+
+                sh 'ls -la'
+
+            }
+
+        }
+
+        stage('Compile') {
+
+            steps {
+
+                dir('EcommerceApp') {  
+
+                    sh 'mvn clean compile'
+
+                }
+
+            }
+
+        } 
+
+        stage('Test') {
+
+            steps {
+
+                dir('EcommerceApp') {
+
+                    sh 'mvn test'
+
+                }
+
+            }
+
+        }
+
+        stage('SonarQube Analysis') {
+
+            steps {
+
+                dir('EcommerceApp') {
+
+                    withSonarQubeEnv('SonarQubeServer') {
+
+                        sh 'mvn sonar:sonar'
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        stage('Package') {
+
+            steps {
+
+                dir('EcommerceApp') {
+
+                    sh 'mvn package'
+
+                }
+            }
+
+        }
+
+}
+
+}
+Then apply and save 
+After that in manage Jenkins -> system -> sonarqube add it -> name it SonarQubeServer -> url like http://56.228.14.138:9000 then add secret key 
+Then build it .
